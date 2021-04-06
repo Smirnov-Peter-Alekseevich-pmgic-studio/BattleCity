@@ -2,6 +2,8 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
+#include "Renderer/ShaderProgram.h"
+
 GLfloat point[] = {
     0.0f,0.5f,0.0f,
     0.5f,-0.5f,0.0f,
@@ -14,7 +16,7 @@ GLfloat colors[] = {
     0.0f,0.0f,1.0f
 };
 
-const char* vertexShader =
+const char* vertex_Shader =
 "#version 400\n"
 "layout(location = 0) in vec3 vertex_position;"
 "layout(location = 1) in vec3 vertex_color;"
@@ -24,7 +26,7 @@ const char* vertexShader =
 "   gl_Position = vec4(vertex_position,1.0);"
 "}";
 
-const char* fragmentShader =
+const char* fragment_Shader =
 "#version 400\n"
 "in vec3 color;"
 "out vec4 frag_color;"
@@ -81,21 +83,13 @@ int main(void)
 	
 	glClearColor(1,1,0,1);
 
-    GLuint vs = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vs, 1,&vertexShader,nullptr);
-    glCompileShader(vs);
+    std::string vertexShader(vertex_Shader);
+    std::string fragmentShader(fragment_Shader);
 
-    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fs, 1, &fragmentShader, nullptr);
-    glCompileShader(fs);
-
-    GLuint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vs);
-    glAttachShader(shaderProgram, fs);
-    glLinkProgram(shaderProgram);
-
-    glDeleteShader(vs);
-    glDeleteShader(fs);
+    Renderer::ShaderProgram sp(vertexShader,fragmentShader);
+    if (!sp.isCompiled()) {
+        std::cerr << "Shader is do not compiled!:(" << std::endl;
+    }
 
     GLuint pointsVbo = 0;
     glGenBuffers(1, &pointsVbo);
@@ -123,7 +117,7 @@ int main(void)
     {
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(shaderProgram);
+        sp.use();
         glBindVertexArray(vao);
         glDrawArrays(GL_TRIANGLES,0,3);
 
