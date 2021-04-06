@@ -21,6 +21,7 @@ public:
 
 	std::shared_ptr<Renderer::ShaderProgram> LoadShaders(const std::string& shaderName, const std::string& vertexPath,const std::string& fragmentPath);
 	std::shared_ptr<Renderer::ShaderProgram> GetShaderProgram(const std::string& shaderName);
+	void LoadTexture(const std::string& textureName, const std::string& path);
 private:
 	const std::string getFileString(const std::string& path);
 	typedef std::map<const std::string, std::shared_ptr<Renderer::ShaderProgram>> shaderProgramsMap;

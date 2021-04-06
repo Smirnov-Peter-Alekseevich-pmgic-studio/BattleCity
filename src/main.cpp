@@ -77,6 +77,7 @@ int main(int argv, char** argc)
             return -1;
         }
 
+        resourceManager.LoadTexture("def","res/textures/map_16x16.png");
 
         GLuint pointsVbo = 0;
         glGenBuffers(1, &pointsVbo);
