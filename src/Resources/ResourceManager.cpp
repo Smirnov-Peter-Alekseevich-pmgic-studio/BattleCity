@@ -46,7 +46,7 @@ std::shared_ptr<Renderer::ShaderProgram> ResourceManager::GetShaderProgram(const
 	return nullptr;
 }
 
-void ResourceManager::LoadTexture(const std::string& textureName, const std::string& path){
+std::shared_ptr<Renderer::Texture2D> ResourceManager::LoadTexture(const std::string& textureName, const std::string& path){
 	int chanels = 0;
 	int width = 0;
 	int height = 0;
@@ -54,9 +54,20 @@ void ResourceManager::LoadTexture(const std::string& textureName, const std::str
 	unsigned char* pixels = stbi_load(std::string(m_path + "/" + path).c_str(),&width,&height,&chanels,0);
 	if (!pixels) {
 		std::cerr << "Can't load image: " << textureName << std::endl;
-		return;
+		return nullptr;
 	}
+	std::shared_ptr<Renderer::Texture2D> newTexture = m_textures.emplace(textureName, std::make_shared<Renderer::Texture2D>(width, height, pixels, chanels, GL_NEAREST, GL_CLAMP_TO_EDGE)).first->second;
 	stbi_image_free(pixels);
+	return newTexture;
+}
+
+std::shared_ptr<Renderer::Texture2D> ResourceManager::GetTexture(const std::string& textureName){
+	texturesMap::const_iterator iterator = m_textures.find(textureName);
+	if (iterator != m_textures.end()) {
+		return iterator->second;
+	}
+	std::cerr << "Can't find texture: " << textureName << std::endl;
+	return nullptr;
 }
 
 const std::string ResourceManager::getFileString(const std::string& path){

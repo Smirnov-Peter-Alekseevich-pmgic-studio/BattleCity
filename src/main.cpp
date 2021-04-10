@@ -4,6 +4,7 @@
 
 #include "Renderer/ShaderProgram.h"
 #include "Resources/ResourceManager.h"
+#include "Renderer/Texture2D.h"
 
 GLfloat point[] = {
     0.0f,0.5f,0.0f,
@@ -15,6 +16,12 @@ GLfloat colors[] = {
     1.0f,0.0f,0.0f,
     0.0f,1.0f,0.0f,
     0.0f,0.0f,1.0f
+};
+
+GLfloat textureCoords[] = {
+        0.5f,1.0f,
+        1.0f,0.0f,
+        0.0f,0.0f
 };
 
 int windowWidth = 640;
@@ -70,14 +77,14 @@ int main(int argv, char** argc)
 
         ResourceManager resourceManager(argc[0]);
 
-        auto pDefaultShaderProgram = resourceManager.LoadShaders("DefShaders", "res/shaders/vertex.shdr", "res/shaders/fragment.shdr");
+        auto pDefaultShaderProgram = resourceManager.LoadShaders("DefShaders", "res/shaders/vertex.vert", "res/shaders/fragment.frag");
 
         if (!pDefaultShaderProgram) {
             system("pause");
             return -1;
         }
 
-        resourceManager.LoadTexture("def","res/textures/map_16x16.png");
+        auto texture = resourceManager.LoadTexture("def","res/textures/map_16x16.png");
 
         GLuint pointsVbo = 0;
         glGenBuffers(1, &pointsVbo);
@@ -88,6 +95,11 @@ int main(int argv, char** argc)
         glGenBuffers(1, &colorsVbo);
         glBindBuffer(GL_ARRAY_BUFFER, colorsVbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+
+        GLuint texture_vbo = 0;
+        glGenBuffers(1, &texture_vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, texture_vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(textureCoords), textureCoords, GL_STATIC_DRAW);
 
         GLuint vao = 0;
         glGenVertexArrays(1, &vao);
@@ -101,12 +113,20 @@ int main(int argv, char** argc)
         glBindBuffer(GL_ARRAY_BUFFER, colorsVbo);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
+        glEnableVertexAttribArray(2);
+        glBindBuffer(GL_ARRAY_BUFFER, texture_vbo);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+        pDefaultShaderProgram->use();
+        pDefaultShaderProgram->setInt("def",0);
+
         while (!glfwWindowShouldClose(window))
         {
             glClear(GL_COLOR_BUFFER_BIT);
 
             pDefaultShaderProgram->use();
             glBindVertexArray(vao);
+            texture->bind();
             glDrawArrays(GL_TRIANGLES, 0, 3);
 
             glfwSwapBuffers(window);

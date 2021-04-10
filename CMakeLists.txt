@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20 FATAL_ERROR) 	# minimal version of cmake
+cmake_minimum_required(VERSION 3.16.5 FATAL_ERROR) 	# minimal version of cmake
 
 set(PROJECT_NAME BattleCity)						#project name
 
@@ -10,6 +10,8 @@ add_executable(${PROJECT_NAME} src/main.cpp
 	src/Resources/stb_image.h
 	src/Resources/ResourceManager.cpp
 	src/Resources/ResourceManager.h
+	src/Renderer/Texture2D.h
+	src/Renderer/Texture2D.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
