@@ -1,5 +1,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/vec2.hpp>
 #include <iostream>
 
 #include "Renderer/ShaderProgram.h"
@@ -24,13 +25,12 @@ GLfloat textureCoords[] = {
         0.0f,0.0f
 };
 
-int windowWidth = 640;
-int windowHeight = 480;
+glm::vec2 WindowSize(640,480);
 
 void glfwWindowResizeCallback(GLFWwindow* window, int width, int height) {
-    windowWidth = width;
-    windowHeight = height;
-    glViewport(0,0,windowWidth,windowHeight);
+    WindowSize.x = width;
+    WindowSize.y = height;
+    glViewport(0,0,WindowSize.x,WindowSize.y);
 }
 
 void glfwKeyBoardCallBack(GLFWwindow* window,int key,int scanmode,int action,int mode) {
@@ -51,7 +51,7 @@ int main(int argv, char** argc)
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-        GLFWwindow* window = glfwCreateWindow(windowWidth, windowHeight, "Battle City", nullptr, nullptr);
+        GLFWwindow* window = glfwCreateWindow(WindowSize.x, WindowSize.y, "Battle City", nullptr, nullptr);
         if (!window)
         {
             glfwTerminate();
