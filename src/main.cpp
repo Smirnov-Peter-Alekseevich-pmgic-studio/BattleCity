@@ -3,148 +3,149 @@
 #include <glm/vec2.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
 #include <iostream>
-
 #include "Renderer/ShaderProgram.h"
 #include "Resources/ResourceManager.h"
 #include "Renderer/Texture2D.h"
+#include "Renderer/Sprite.h"
 
 GLfloat point[] = {
-    0.0f,50.0f,0.0f,
-    50.0f,-50.0f,0.0f,
-    -50.0f,-50.0f,0.0f
+        0.0f,  50.f, 0.0f,
+        50.f, -50.f, 0.0f,
+        -50.f, -50.f, 0.0f
 };
-
 GLfloat colors[] = {
-    1.0f,0.0f,0.0f,
-    0.0f,1.0f,0.0f,
-    0.0f,0.0f,1.0f
+        1.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 1.0f
 };
-
-GLfloat textureCoords[] = {
-        0.5f,1.0f,
-        1.0f,0.0f,
-        0.0f,0.0f
+GLfloat texCoord[] = {
+        0.5f, 1.0f,
+        1.0f, 0.0f,
+        0.0f, 0.0f
 };
-
-glm::vec2 WindowSize(640,480);
-
-void glfwWindowResizeCallback(GLFWwindow* window, int width, int height) {
-    WindowSize.x = width;
-    WindowSize.y = height;
-    glViewport(0,0,WindowSize.x,WindowSize.y);
+glm::ivec2 g_windowSize(640, 480);
+void glfwWindowSizeCallback(GLFWwindow* pWindow, int width, int height)
+{
+    g_windowSize.x = width;
+    g_windowSize.y = height;
+    glViewport(0, 0, width, height);
 }
-
-void glfwKeyBoardCallBack(GLFWwindow* window,int key,int scanmode,int action,int mode) {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window,GL_TRUE);
+void glfwKeyCallback(GLFWwindow* pWindow, int key, int scancode, int action, int mode)
+{
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    {
+        glfwSetWindowShouldClose(pWindow, GL_TRUE);
     }
 }
-
-int main(int argv, char** argc)
+int main(int argc, char** argv)
 {
+    /* Initialize the library */
+    if (!glfwInit())
     {
-        if (!glfwInit()) {
-            std::cout << "Error init GLFW" << std::endl;
-            return -1;
-        }
-
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-        GLFWwindow* window = glfwCreateWindow(WindowSize.x, WindowSize.y, "Battle City", nullptr, nullptr);
-        if (!window)
+        std::cout << "glfwInit failed!" << std::endl;
+        return -1;
+    }
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    /* Create a windowed mode window and its OpenGL context */
+    GLFWwindow* pWindow = glfwCreateWindow(g_windowSize.x, g_windowSize.y, "Battle City", nullptr, nullptr);
+    if (!pWindow)
+    {
+        std::cout << "glfwCreateWindow failed!" << std::endl;
+        glfwTerminate();
+        return -1;
+    }
+    glfwSetWindowSizeCallback(pWindow, glfwWindowSizeCallback);
+    glfwSetKeyCallback(pWindow, glfwKeyCallback);
+    /* Make the window's context current */
+    glfwMakeContextCurrent(pWindow);
+    if (!gladLoadGL())
+    {
+        std::cout << "Can't load GLAD!" << std::endl;
+    }
+    std::cout << "Renderer: " << glGetString(GL_RENDERER) << std::endl;
+    std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
+    glClearColor(1, 1, 0, 1);
+    {
+        ResourceManager resourceManager(argv[0]);
+        auto pDefaultShaderProgram = resourceManager.loadShaders("DefaultShader", "res/shaders/vertex.vert", "res/shaders/fragment.frag");
+        if (!pDefaultShaderProgram)
         {
-            glfwTerminate();
-            std::cout << "Error init window!" << std::endl;
+            std::cerr << "Can't create shader program: " << "DefaultShader" << std::endl;
             return -1;
         }
 
-        glfwMakeContextCurrent(window);
-
-        if (!gladLoadGL()) {
-            std::cout << "Can't load GLAD" << std::endl;
+        auto pSpriteShaderProgram = resourceManager.loadShaders("SpriteShader", "res/shaders/vertexSprite.vert", "res/shaders/fragmentSprite.frag");
+        if (!pSpriteShaderProgram)
+        {
+            std::cerr << "Can't create shader program: " << "SpriteShader" << std::endl;
             return -1;
         }
 
-        glfwSetWindowSizeCallback(window, glfwWindowResizeCallback);
-        glfwSetKeyCallback(window, glfwKeyBoardCallBack);
+        auto tex = resourceManager.loadTexture("DefaultTexture", "res/textures/map_16x16.png");
 
-        std::cout << "Renderer: " << glGetString(GL_RENDERER) << std::endl;
-        std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
+        auto pSprite = resourceManager.loadSprite("NewSprite", "DefaultTexture", "SpriteShader", 50, 100);
+        pSprite->setPosition(glm::vec2(300, 100));
 
-        glClearColor(1, 1, 0, 1);
-
-
-        ResourceManager resourceManager(argc[0]);
-
-        auto pDefaultShaderProgram = resourceManager.LoadShaders("DefShaders", "res/shaders/vertex.vert", "res/shaders/fragment.frag");
-
-        if (!pDefaultShaderProgram) {
-            system("pause");
-            return -1;
-        }
-
-        auto texture = resourceManager.LoadTexture("def","res/textures/map_16x16.png");
-
-        GLuint pointsVbo = 0;
-        glGenBuffers(1, &pointsVbo);
-        glBindBuffer(GL_ARRAY_BUFFER, pointsVbo);
+        GLuint points_vbo = 0;
+        glGenBuffers(1, &points_vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(point), point, GL_STATIC_DRAW);
-
-        GLuint colorsVbo = 0;
-        glGenBuffers(1, &colorsVbo);
-        glBindBuffer(GL_ARRAY_BUFFER, colorsVbo);
+        GLuint colors_vbo = 0;
+        glGenBuffers(1, &colors_vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, colors_vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
-
-        GLuint texture_vbo = 0;
-        glGenBuffers(1, &texture_vbo);
-        glBindBuffer(GL_ARRAY_BUFFER, texture_vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(textureCoords), textureCoords, GL_STATIC_DRAW);
-
+        GLuint texCoord_vbo = 0;
+        glGenBuffers(1, &texCoord_vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, texCoord_vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(texCoord), texCoord, GL_STATIC_DRAW);
         GLuint vao = 0;
         glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
-
         glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, pointsVbo);
+        glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-
         glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, colorsVbo);
+        glBindBuffer(GL_ARRAY_BUFFER, colors_vbo);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-
         glEnableVertexAttribArray(2);
-        glBindBuffer(GL_ARRAY_BUFFER, texture_vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, texCoord_vbo);
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-
         pDefaultShaderProgram->use();
-        pDefaultShaderProgram->setInt("def",0);
+        pDefaultShaderProgram->setInt("tex", 0);
+        glm::mat4 modelMatrix_1 = glm::mat4(1.f);
+        modelMatrix_1 = glm::translate(modelMatrix_1, glm::vec3(100.f, 50.f, 0.f));
+        glm::mat4 modelMatrix_2 = glm::mat4(1.f);
+        modelMatrix_2 = glm::translate(modelMatrix_2, glm::vec3(590.f, 50.f, 0.f));
+        glm::mat4 projectionMatrix = glm::ortho(0.f, static_cast<float>(g_windowSize.x), 0.f, static_cast<float>(g_windowSize.y), -100.f, 100.f);
 
-        glm::mat4 modelMatrix_1 = glm::mat4x4(1.f);
-        modelMatrix_1 = glm::translate(modelMatrix_1,glm::vec3(100.f,200.f,0.f));
+        pDefaultShaderProgram->SetMatrix4("projectionMat", projectionMatrix);
 
-        glm::mat4 modelMatrix_2 = glm::mat4x4(1.f);
-        modelMatrix_2 = glm::translate(modelMatrix_2, glm::vec3(590.f, 200.f, 0.f));
+        pSpriteShaderProgram->use();
+        pSpriteShaderProgram->setInt("tex", 0);
+        pSpriteShaderProgram->SetMatrix4("projectionMat", projectionMatrix);
 
-        glm::mat4 projectionMatrix = glm::ortho(0.f,WindowSize.x,0.f,WindowSize.y,-100.f,100.f);
-
-        pDefaultShaderProgram->SetMatrix4("projectionMatrix",projectionMatrix);
-
-        while (!glfwWindowShouldClose(window))
+        /* Loop until the user closes the window */
+        while (!glfwWindowShouldClose(pWindow))
         {
+            /* Render here */
             glClear(GL_COLOR_BUFFER_BIT);
-
             pDefaultShaderProgram->use();
             glBindVertexArray(vao);
-            texture->bind();
-            pDefaultShaderProgram->SetMatrix4("modelMatrix", modelMatrix_1);
+            tex->bind();
+            pDefaultShaderProgram->SetMatrix4("modelMat", modelMatrix_1);
             glDrawArrays(GL_TRIANGLES, 0, 3);
-            pDefaultShaderProgram->SetMatrix4("modelMatrix", modelMatrix_2);
+            pDefaultShaderProgram->SetMatrix4("modelMat", modelMatrix_2);
             glDrawArrays(GL_TRIANGLES, 0, 3);
-            glfwSwapBuffers(window);
+
+            pSprite->render();
+
+            /* Swap front and back buffers */
+            glfwSwapBuffers(pWindow);
+
+            /* Poll for and process events */
             glfwPollEvents();
         }
     }
