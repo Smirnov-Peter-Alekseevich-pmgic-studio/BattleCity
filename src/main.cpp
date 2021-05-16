@@ -70,24 +70,42 @@ int main(int argc, char** argv)
     glClearColor(1, 1, 0, 1);
     {
         ResourceManager resourceManager(argv[0]);
-        auto pDefaultShaderProgram = resourceManager.loadShaders("DefaultShader", "res/shaders/vertex.vert", "res/shaders/fragment.frag");
+        auto pDefaultShaderProgram = resourceManager.loadShaders(
+                "DefaultShader",
+                "res/shaders/vertex.vert",
+                "res/shaders/fragment.frag");
         if (!pDefaultShaderProgram)
         {
             std::cerr << "Can't create shader program: " << "DefaultShader" << std::endl;
             return -1;
         }
 
-        auto pSpriteShaderProgram = resourceManager.loadShaders("SpriteShader", "res/shaders/vertexSprite.vert", "res/shaders/fragmentSprite.frag");
+        auto pSpriteShaderProgram = resourceManager.loadShaders(
+                "SpriteShader",
+                "res/shaders/vertexSprite.vert",
+                "res/shaders/fragmentSprite.frag");
         if (!pSpriteShaderProgram)
         {
             std::cerr << "Can't create shader program: " << "SpriteShader" << std::endl;
             return -1;
         }
 
-        auto tex = resourceManager.loadTexture("DefaultTexture", "res/textures/map_16x16.png");
+        auto tex = resourceManager.loadTexture(
+                "DefaultTexture",
+                "res/textures/map_16x16.png");
 
-        auto pSprite = resourceManager.loadSprite("NewSprite", "DefaultTexture", "SpriteShader", 50, 100);
-        pSprite->setPosition(glm::vec2(300, 100));
+        std::vector<std::string> subTexturesNames = {"block","top_block","bottom_block","left_block","rightBlock","topLeftBlock","topWriteBlock","bottomRightBlock","bottomRightBlock","beton"};
+
+        auto pTextureAtlas = resourceManager.loadTextureAtlas("defaultTextureAtlas","res/textures/map_16x16.png",std::move(subTexturesNames),16,16);
+        auto pSprite = resourceManager.loadSprite(
+                "NewSprite",
+                "defaultTextureAtlas",
+                "SpriteShader",
+                100,
+                100,"block");
+        pSprite->setPosition(glm::vec2(
+                300,
+                100));
 
         GLuint points_vbo = 0;
         glGenBuffers(1, &points_vbo);

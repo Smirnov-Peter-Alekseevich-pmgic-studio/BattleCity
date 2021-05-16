@@ -59,4 +59,16 @@ Renderer::Texture2D& Renderer::Texture2D::operator=(Texture2D&& texture2D) {
 	m_width = texture2D.m_width;
 	m_height = texture2D.m_height;
 	return *this;
-};
+}
+
+void Renderer::Texture2D::addSubTexture(const std::string& nameSubTexture,const glm::vec2& leftBottomVM,const glm::vec2& rightTopVM){
+    m_subTextures.emplace(std::move(nameSubTexture),SubTexture2D(leftBottomVM,rightTopVM));
+}
+
+const Renderer::Texture2D::SubTexture2D &Renderer::Texture2D::getSubTexture(const std::string &name) const {
+    auto it = m_subTextures.find(name);
+    if(it != m_subTextures.end())
+        return it->second;
+    const static SubTexture2D defaultSubTexture;
+    return defaultSubTexture;
+}
